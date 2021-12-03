@@ -4,37 +4,42 @@
 """
 
 
-def text_to_bit_array(text):
+def text_to_ord_list(text):
     """
-    Создаёт из строки список бит
+    Создаёт из строки список с номерами
     :param text: строка текста (str)
-    :return: список бит (list)
+    :return: список чисел (list)
     """
-    return list(map(int, ''.join([bin(ord(i)).lstrip('0b').rjust(8, '0') for i in text])))
+    return [ord(i) for i in text]
 
 
-def bit_array_to_text(bit_array):
+def ord_list_to_text(num_list):
     """
     Создаёт из списка бит строку
-    :param bit_array: список бит (list)
+    :param num_list: список чисел (list)
     :return: строка (str)
     """
-    return ''.join(chr(int(''.join(map(str, bit_array[i:i + 8])), 2)) for i in range(0, len(bit_array), 8))
+    return ''.join(chr(i) for i in num_list)
 
 
-def function(text, password):
+def function(text, password, crypt_flag=True):
     """
     Преобразует текст по данному паролю
+    :param crypt_flag: шифрование/дешифровка (bool)
     :param text: текст (str)
     :param password: пароль (str)
     :return: преобразованный текст (str)
     """
-    password_bit_array = text_to_bit_array(password)
-    text_bit_array = text_to_bit_array(text)
+    password_num_list = text_to_ord_list(password)
+    text_num_list = text_to_ord_list(text)
     result = list()
-    for i in range(len(text_bit_array)):
-        result.append(text_bit_array[i] ^ password_bit_array[i % len(password)])
-    return bit_array_to_text(result)
+    if crypt_flag:
+        for i in range(len(text_num_list)):
+            result.append(text_num_list[i] + password_num_list[i % len(password)])
+    else:
+        for i in range(len(text_num_list)):
+            result.append(text_num_list[i] - password_num_list[i % len(password)])
+    return ord_list_to_text(result)
 
 
 def encrypt(text, password):
@@ -54,4 +59,4 @@ def decrypt(text, password):
     :param password: пароль (str)
     :return: строка исходного текста (str)
     """
-    return function(text, password)
+    return function(text, password, False)
