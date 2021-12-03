@@ -25,6 +25,8 @@ ERROR_DEL = 'При удалении произошла ошибка.'
 DEL_MESSAGE = 'Удаление'
 YOU_SERIOUSLY = 'Вы действительно хотите удалить файл?'
 CANCEL = 'Отменено'
+SAVED = 'Сохранено'
+CREATE_FILE = 'Создание файла'
 
 
 def except_hook(cls, exception, traceback):
@@ -69,7 +71,8 @@ class Main(QMainWindow, Ui_MainWindow):
             DEL_MESSAGE,
             YOU_SERIOUSLY,
             QMessageBox.Ok,
-            QMessageBox.Cancel)
+            QMessageBox.Cancel
+        )
         if button_answer == QMessageBox.Ok:
             return True
         if button_answer == QMessageBox.Cancel:
@@ -79,7 +82,7 @@ class Main(QMainWindow, Ui_MainWindow):
         """
         Окно создания файла и ввода пароля
         """
-        password, ok_button = QInputDialog.getText(self, OPEN_FILE, ENTER_PASSWORD)
+        password, ok_button = QInputDialog.getText(self, CREATE_FILE, ENTER_PASSWORD)
         if ok_button:
             result = self.file.create(password)
             if result is True:
@@ -130,11 +133,13 @@ class Main(QMainWindow, Ui_MainWindow):
         self.get_file_window(CHOOSE_FILE)
         if self.file.get_path() is None:
             self.set_status_bar(DO_NOT_CHOOSE_PATH)
+            self.file.set_path(None)
             return False
         try:
             text = self.file.read()
             if not text:
                 self.set_status_bar(FILE_NOT_ENCRYPTED)
+                self.file.set_path(None)
                 return False
         except FileError as fe:
             self.set_status_bar(fe.__str__())
@@ -159,6 +164,7 @@ class Main(QMainWindow, Ui_MainWindow):
             password, ok_button = QInputDialog.getText(self, CONFIRM_EDITS, WARNING_EDITS)
             if ok_button and self.file.check_password(password):
                 self.file.write(encrypt(text=self.get_plain_text(), password=password))
+                self.set_status_bar(SAVED)
         else:
             self.set_file_window(SAVE_FILE)
             if self.file.path is not None:
@@ -168,17 +174,17 @@ class Main(QMainWindow, Ui_MainWindow):
         """
         Удаление файла
         """
-        delete = self.delete_window()
-        if delete:
-            result = self.file.delete()
-            if result is True:
+        result = self.file.delete()
+        if result is True:
+            delete = self.delete_window()
+            if delete:
                 self.set_status_bar(GOOD_DEL)
                 self.set_plain_text('')
                 self.file.set_path(None)
             else:
-                self.set_status_bar(ERROR_DEL + ' ' + result)
+                self.set_status_bar(CANCEL)
         else:
-            self.set_status_bar(CANCEL)
+            self.set_status_bar(ERROR_DEL + ' ' + result)
 
     def keyPressEvent(self, event):
         """
